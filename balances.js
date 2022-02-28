@@ -1,56 +1,17 @@
-"use strict";
-var BigNumber = require("bignumber.js");
-const enumerable = require("linq");
-
-module.exports.createBalances = async data => {
-  const balances = new Map();
-  const closingBalances = [];
-
-  const setDeposits = event => {
-    const wallet = event.to;
-
-    let deposits = (balances.get(wallet) || {}).deposits || [];
-    let withdrawals = (balances.get(wallet) || {}).withdrawals || [];
-
-    if (!event.tokenId) {
-      throw new TypeError('invalid tokenId value');
+module.exports.getBalances = (data) => {
+  const _balances = data.events.reduce((prev, cur) => {
+    if (cur.from !== "0x0000000000000000000000000000000000000000") {
+      prev[cur.from].tokenIds = prev[cur.from].tokenIds.filter((tokenId) => tokenId !== cur.tokenId);
+      prev[cur.from].amount -= 1;
+      if (prev[cur.from].tokenIds.length === 0) delete prev[cur.from];
     }
+    if (!prev[cur.to]) prev[cur.to] = { wallet: cur.to, tokenIds: [], amount: 0 };
+    prev[cur.to].tokenIds = [...prev[cur.to].tokenIds, cur.tokenId];
+    prev[cur.to].amount += 1;
+    return prev;
+  }, {});
 
-    deposits = [...deposits, event.tokenId];
-    balances.set(wallet, { deposits, withdrawals });
-  };
+  const balances = Object.keys(_balances).map((key) => _balances[key]);
 
-  const setWithdrawals = event => {
-    const wallet = event.from;
-
-    let deposits = (balances.get(wallet) || {}).deposits || [];
-    let withdrawals = (balances.get(wallet) || {}).withdrawals || [];
-
-    if (!event.tokenId) {
-      throw new TypeError('invalid tokenId value');
-    }
-
-    withdrawals = [...withdrawals, event.tokenId];
-    balances.set(wallet, { deposits, withdrawals });
-  };
-
-  for (const event of data.events) {
-    setDeposits(event);
-    setWithdrawals(event);
-  }
-
-  for (const [key, value] of balances.entries()) {
-    if (key === "0x0000000000000000000000000000000000000000") {
-      continue;
-    }
-
-    const tokenIds = value.deposits.filter(x => !value.withdrawals.includes(x));
-
-    closingBalances.push({
-      wallet: key,
-      tokenIds
-    });
-  }
-
-  return closingBalances.filter(b => b.tokenIds.length > 0);
+  return balances;
 };

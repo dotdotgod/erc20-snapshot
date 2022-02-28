@@ -10,21 +10,22 @@ const Parameters = require("../parameters").get();
 const readdirAsync = promisify(fs.readdir);
 const readFileAsync = promisify(fs.readFile);
 
-const getMinimal = pastEvents => {
-  return pastEvents.map(tx => {
+const getMinimal = (pastEvents) => {
+  return pastEvents.map((tx) => {
     return {
       transactionHash: tx.transactionHash,
       from: tx.returnValues["0"],
       to: tx.returnValues["1"],
-      tokenId: tx.returnValues["2"]
+      tokenId: tx.returnValues["2"],
+      blockNumber: tx.blockNumber
     };
   });
 };
 
-module.exports.getEvents = async symbol => {
+module.exports.getEvents = async (symbol) => {
   const directory = Parameters.eventsDownloadFolder.replace(/{token}/g, symbol);
   var files = await readdirAsync(directory);
-  files.sort((a,b) => {
+  files.sort((a, b) => {
     return parseInt(a.split(".")[0]) - parseInt(b.split(".")[0]);
   });
   let events = [];
@@ -39,5 +40,5 @@ module.exports.getEvents = async symbol => {
     events = events.concat(getMinimal(parsed));
   }
 
-  return events;
+  return events.sort((a, b) => a.blockNumber - b.blockNumber);
 };

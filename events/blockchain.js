@@ -75,7 +75,7 @@ module.exports.get = async () => {
   let end = fromBlock + blocksPerBatch;
   let i = 0;
 
-  while (end < toBlock) {
+  while (end <= toBlock) {
     i++;
 
     if (delay) {
@@ -85,6 +85,11 @@ module.exports.get = async () => {
     console.log("Batch", i + 1, " From", start, "to", end);
 
     await tryGetEvents(start, end, symbol);
+
+    if (end === toBlock) {
+      end += 1;
+      break;
+    }
 
     start = end + 1;
     end = start + blocksPerBatch;
