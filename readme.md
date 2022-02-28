@@ -1,6 +1,9 @@
 # Token Snapshot: Create ERC721 Token Snapshot
 
-> Forked from [erc20-snapshot](https://github.com/binodnp/erc20-snapshot)
+> Forked from [erc721-snapshot](https://github.com/0xSlot/erc721-snapshot)
+
+- fix blockHeight issue
+- remove holder issue
 
 This command-line utility creates a snapshot of any ERC721 token in JSON or CSV format. Use your own fully synced Ethereum node or any _Ethereum node as a service_ like Infura.
 
